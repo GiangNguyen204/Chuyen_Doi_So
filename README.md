@@ -74,26 +74,28 @@
 
 ## 3. Một số hình ảnh hệ thống
 
-> *(Thay các đường dẫn `docs/*.png` bằng ảnh thực tế trong repo của bạn)*
-
 <p align="center">
     <em>Màn hình đăng nhập với Google Sign-in</em><br/>
-    <img src="docs/login_dienbien.png" width="850" alt="Login Screen"/>
+    <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/eb8feace-4ca3-41ac-8159-59a557b7ad71" />
+
 </p>
 
 <p align="center">
     <em>Giao diện màn chơi chính: ảnh sự kiện, câu hỏi, điểm và leaderboard</em><br/>
-    <img src="docs/mainscreen_dienbien.png" width="850" alt="Main Screen"/>
+    <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/e55fddd3-2b25-4a44-88d7-ea7de650dac5" />
+
 </p>
 
 <p align="center">
     <em>Lưới 10 mốc sự kiện Điện Biên Phủ</em><br/>
-    <img src="docs/eventgrid_dienbien.png" width="850" alt="Event Grid"/>
+  <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/68537ee7-8795-419f-9702-6782e74a9269" />
+  <img src="docs/eventgrid_dienbien.png" width="850" alt="Event Grid"/>
 </p>
 
 <p align="center">
     <em>Pháo hoa Grand Finale khi người chơi đạt điểm tuyệt đối</em><br/>
-    <img src="docs/fireworks_dienbien.png" width="850" alt="Fireworks"/>
+    <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/9d0e9f11-507b-4042-bd5e-a976452b2a77" />
+
 </p>
 
 ---
