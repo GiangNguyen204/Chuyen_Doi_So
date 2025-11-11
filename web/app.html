@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="vi" class="no-scrollbar">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Điện Biên Phủ — Lịch sử tương tác </title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['Playfair Display', 'serif'],
+          sans: ['Inter', 'system-ui', 'sans-serif']
+        },
+        colors: { parchment: '#f4ecd8', gold: '#d4b866' }
+      }
+    }
+  }
+</script>
+
+<!-- Firebase compat SDKs -->
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBhurmQcshxOr5owE50LtzU-KABLapK0eo",
+    authDomain: "dienbienphugame.firebaseapp.com",
+    projectId: "dienbienphugame",
+    storageBucket: "dienbienphugame.appspot.com",
+    messagingSenderId: "918716554179",
+    appId: "1:918716554179:web:d7336765e9b05379387b76"
+  };
+  firebase.initializeApp(firebaseConfig);
+  window.__firebase = { auth: firebase.auth(), db: firebase.firestore() };
+</script>
+
+<style>
+  .bg-overlay::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      radial-gradient(1200px 600px at 50% 15%, rgba(0,0,0,.35), transparent 60%),
+      linear-gradient(to bottom, rgba(0,0,0,.65), rgba(0,0,0,.65));
+    pointer-events:none;
+  }
+  .event-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    transition: transform 0.4s ease, box-shadow 0.3s ease;
+  }
+  .event-image:hover {
+    transform: scale(1.015);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+  }
+  @media (max-width: 640px) {
+    .event-image { aspect-ratio: 16/9; height: auto; }
+  }
+
+  /* Ẩn thanh cuộn nhưng vẫn cho phép cuộn */
+  body.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  body.no-scrollbar::-webkit-scrollbar { display: none; }
+
+  html.no-scrollbar, body.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    overscroll-behavior: none;
+  }
+  html.no-scrollbar::-webkit-scrollbar,
+  body.no-scrollbar::-webkit-scrollbar {
+    width: 0; height: 0; display: none;
+  }
+
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .hide-scrollbar::-webkit-scrollbar { display:none; width:0; height:0; }
+</style>
+</head>
+
+<body class="font-sans text-slate-100 no-scrollbar">
+  <!-- Nền -->
+  <div class="fixed inset-0 -z-10">
+    <img src="assets/02.webp" alt="animated background" class="w-full h-full object-cover"/>
+  </div>
+  <div class="bg-overlay fixed inset-0 -z-10"></div>
+
+  <!-- Gate âm thanh -->
+  <div id="audioGate"
+       class="fixed inset-0 z-40 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+    <button id="btnGate"
+      class="px-5 py-3 rounded-xl bg-gold text-black font-semibold shadow-lg ring-1 ring-white/20">
+      ▶️ Bấm để bắt đầu âm thanh
+    </button>
+  </div>
+
+  <!-- Nội dung -->
+  <div class="w-full min-h-screen p-4 md:p-8 space-y-6">
+
+    <header class="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h1 class="font-display text-3xl md:text-4xl font-semibold tracking-tight text-parchment">
+          Điện Biên Phủ (1954) — Web game lịch sử
+        </h1>
+        <p class="text-slate-200/85 mt-1">Sản phẩm của Giang Nguyen</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div id="userInfo" class="flex items-center gap-2 text-parchment"></div>
+        <button id="btnLogin"  class="px-3 py-2 bg-gold text-black font-semibold rounded-lg hover:brightness-110">Đăng nhập</button>
+        <button id="btnLogout" class="hidden px-3 py-2 bg-white/20 text-white rounded-lg ring-1 ring-white/30 hover:bg-white/10">Đăng xuất</button>
+      </div>
+    </header>
+
+    <div class="w-full bg-white/20 rounded-full h-2 overflow-hidden ring-1 ring-white/20">
+      <div id="progressBar" class="h-2 bg-gold w-0 transition-all duration-300"></div>
+    </div>
+
+    <!-- Khu 2 cột: câu hỏi + xếp hạng -->
+    <section class="grid md:grid-cols-3 gap-5 w-full">
+      <!-- Cột trái -->
+      <div class="md:col-span-2 w-full">
+        <div class="rounded-2xl bg-black/45 ring-1 ring-white/10 backdrop-blur-md shadow-xl p-5 space-y-4">
+          <img id="eventImg" class="event-image"
+               src="assets/1.jpg"
+               onerror="this.onerror=null; this.src='assets/1.jpg';"
+               alt="Sự kiện minh hoạ"/>
+
+          <div>
+            <h2 id="eventTitle" class="text-xl font-semibold text-parchment"></h2>
+            <p id="eventDesc" class="text-slate-100/90"></p>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-full h-2 bg-white/20 rounded">
+              <div id="timeBar" class="h-2 bg-amber-500 rounded transition-all"></div>
+            </div>
+            <span id="timeText" class="text-sm font-semibold w-10 text-right">20</span>
+          </div>
+
+          <div id="answers" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <button id="btnNarrate" class="px-4 py-2 rounded-xl bg-gold text-black font-semibold hover:brightness-110">▶️ Nghe thuyết minh</button>
+            <button id="btnHint" class="px-3 py-2 rounded-xl bg-amber-100/90 text-amber-900 ring-1 ring-amber-300 hover:bg-amber-100">💡 Gợi ý</button>
+            <button id="btn5050" class="px-3 py-2 rounded-xl bg-emerald-100/90 text-emerald-900 ring-1 ring-emerald-300 hover:bg-emerald-100">50:50</button>
+            <div class="ml-auto flex items-center gap-2">
+              <button id="btnNext" class="px-3 py-2 rounded-xl bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/5">Tiếp ➡️</button>
+            </div>
+          </div>
+
+          <div id="explain" class="hidden p-3 rounded-xl bg-parchment/90 text-slate-900 text-sm ring-1 ring-amber-800/30"></div>
+
+          <!-- Giữ 2 input cấu hình voice/style -->
+          <div class="grid md:grid-cols-2 gap-3 pt-3 border-t border-white/10">
+            <div class="space-y-2">
+              <label class="block text-sm text-parchment/90">Giọng (tên voice, để trống = mặc định)</label>
+              <input id="voiceName" class="w-full border rounded-lg px-3 py-2 bg-black/40 text-white ring-1 ring-white/20" placeholder="Ví dụ: Microsoft Hoai My Online (Natural) - Vietnamese (Vietnam)"/>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm text-parchment/90">Phong cách đọc (ghi chú cá nhân)</label>
+              <input id="speakingStyle" class="w-full border rounded-lg px-3 py-2 bg-black/40 text-white ring-1 ring-white/20" placeholder="Giọng trang trọng, rõ ràng, nhấn mạnh ngày tháng và địa danh." />
+            </div>
+            <label class="flex items-center gap-2 text-sm col-span-2"><input id="autoNarrate" type="checkbox"> Tự phát thuyết minh</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cột phải (xếp hạng + nền 2.webp) -->
+      <aside class="rounded-2xl relative overflow-hidden ring-1 ring-white/10 shadow-xl p-5 space-y-3 w-full">
+        <div class="absolute inset-0 z-0">
+          <img src="assets/2.webp" alt="Leaderboard background"
+               class="w-full h-full object-cover brightness-[0.45]">
+        </div>
+        <div class="absolute inset-0 bg-black/40 z-0"></div>
+
+        <div class="relative z-10 space-y-3">
+          <h3 class="font-semibold text-lg text-parchment drop-shadow-lg">Điểm & Tiến độ</h3>
+          <p>Câu: <span id="qIndex">1</span>/<span id="qTotal">—</span></p>
+          <p>Điểm: <span id="score">0</span></p>
+          <p>Combo: <span id="streak">0</span></p>
+
+          <div class="pt-3 border-t border-white/10 space-y-2">
+            <h4 class="font-semibold text-parchment/90">🌍 Bảng xếp hạng toàn cầu</h4>
+            <ol id="globalLeaderboard" class="text-sm list-decimal pl-4 space-y-1 text-parchment"></ol>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- 🔹 Khối danh mục sự kiện -->
+    <div class="rounded-2xl bg-black/45 ring-1 ring-white/10 backdrop-blur-md shadow-xl p-5 w-full">
+      <h3 class="font-semibold text-lg text-parchment mb-2">Danh mục sự kiện</h3>
+      <div id="eventGrid" class="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"></div>
+    </div>
+
+  </div> <!-- /container -->
+
+  <!-- Auth -->
+  <script>
+  (function () {
+    try {
+      const auth = window.__firebase && window.__firebase.auth;
+      if (!auth) return;
+
+      const btnLogout = document.getElementById('btnLogout');
+      const btnLogin  = document.getElementById('btnLogin');
+      const userInfo  = document.getElementById('userInfo');
+
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          if (userInfo) userInfo.textContent = `👤 ${user.displayName || user.email}`;
+          if (btnLogin)  btnLogin.classList.add('hidden');
+          if (btnLogout) btnLogout.classList.remove('hidden');
+        } else {
+          window.location.href = "index.html";
+        }
+      });
+
+      if (btnLogout) {
+        btnLogout.addEventListener('click', async () => {
+          try { await auth.signOut(); }
+          finally { window.location.href = "index.html"; }
+        });
+      }
+
+      if (btnLogin) {
+        btnLogin.addEventListener('click', async () => {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          await auth.signInWithPopup(provider);
+        });
+      }
+    } catch (e) {
+      console.warn('[AuthGuard] error:', e);
+    }
+  })();
+  </script>
+
+  <!-- Game -->
+  <script>
+  const auth = window.__firebase.auth;
+  const db   = window.__firebase.db;
+
+  const elImg=document.getElementById('eventImg');
+  const elTitle=document.getElementById('eventTitle');
+  const elDesc=document.getElementById('eventDesc');
+  const elAnswers=document.getElementById('answers');
+  const elExplain=document.getElementById('explain');
+  const elQIndex=document.getElementById('qIndex');
+  const elQTotal=document.getElementById('qTotal');
+  const elGrid=document.getElementById('eventGrid');
+  const elProgress=document.getElementById('progressBar');
+  const elTimeBar=document.getElementById('timeBar');
+  const elTimeText=document.getElementById('timeText');
+
+  const btnNarr=document.getElementById('btnNarrate');
+  const btnNext=document.getElementById('btnNext');
+  const btnHint=document.getElementById('btnHint');
+  const btn5050=document.getElementById('btn5050');
+
+  const autoNarrate=document.getElementById('autoNarrate');
+  const voiceName=document.getElementById('voiceName');
+  const speakingStyle=document.getElementById('speakingStyle');
+
+  const gate=document.getElementById('audioGate');
+  const btnGate=document.getElementById('btnGate');
+
+  elQTotal.textContent = '—';
+
+  let currentUser=null;
+  auth.onAuthStateChanged(u=>currentUser=u||null);
+
+  const globalLeaderboard = document.getElementById('globalLeaderboard');
+  if (db && globalLeaderboard) {
+    db.collection('scores').orderBy('score','desc').limit(10)
+      .onSnapshot(snap=>{
+        globalLeaderboard.innerHTML='';
+        snap.forEach(doc=>{
+          const d=doc.data();
+          const li=document.createElement('li');
+          li.innerHTML=`<div class="flex items-center gap-2">
+            <img src="${d.photo||''}" class="w-5 h-5 rounded-full ring-1 ring-white/20">
+            <span class="font-semibold">${d.name||'Người chơi'}</span>
+            <span class="ml-auto text-slate-200/90">${d.score} điểm</span>
+          </div>`;
+          globalLeaderboard.appendChild(li);
+        });
+      });
+  }
+  async function saveScoreCloud(score, bestStreak){
+    if(!currentUser || !db) return;
+    try {
+      await db.collection('scores').add({
+        uid: currentUser.uid,
+        name: currentUser.displayName || currentUser.email,
+        photo: currentUser.photoURL || '',
+        score, bestStreak,
+        created: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch(e){ console.error('Ghi điểm lỗi:', e); }
+  }
+
+  /* EVENTS (1–4 .jpg, 5 .webp, 6–10 .jpg) */
+  const EVENTS = [
+    { id:'dbp1',  title:'Mở màn chiến dịch (13/3/1954)', img:'assets/1.jpg',
+      desc:'Tấn công cứ điểm Him Lam, mở đầu chiến dịch Điện Biên Phủ.',
+      hint:'Him Lam là cửa ngõ phía Bắc của tập đoàn cứ điểm.',
+      explain:'Trận Him Lam mở toang cửa ngõ tiến vào trung tâm.',
+      quiz:{ question:'Cứ điểm nào bị tấn công đầu tiên?', options:['Đồi A1','Him Lam','Độc Lập','Mường Thanh'], answerIndex:1 } },
+    { id:'dbp2',  title:'Trận Độc Lập (15/3/1954)', img:'assets/2.jpg',
+      desc:'Sau Him Lam, quân ta tiến công cứ điểm Độc Lập.',
+      hint:'Gần tuyến đường vào thung lũng.',
+      explain:'Độc Lập thất thủ khiến cánh Bắc suy yếu mạnh.',
+      quiz:{ question:'Trận Độc Lập diễn ra sau sự kiện nào?', options:['Trận Mường Thanh','Trận Him Lam','Trận A1','Trận C1'], answerIndex:1 } },
+    { id:'dbp3',  title:'Đồi C1, D1 (30/3–2/4/1954)', img:'assets/3.jpg',
+      desc:'Đánh trên dãy C, D để áp sát Mường Thanh.',
+      hint:'Mục tiêu là áp sát trung tâm.',
+      explain:'Làm chủ cao điểm giúp khống chế hoả lực.',
+      quiz:{ question:'Mục tiêu chính của các trận trên dãy C, D là?', options:['Phá kho đạn','Tiến gần Mường Thanh','Bắt De Castries','Chiếm sân bay'], answerIndex:1 } },
+    { id:'dbp4',  title:'Đồi A1 – trận quyết định (6/5/1954)', img:'assets/4.jpg',
+      desc:'Làm chủ đồi A1 sau đêm tiến công quyết liệt.',
+      hint:'A1 là “cửa sổ” của Mường Thanh.',
+      explain:'A1 khống chế trung tâm; chiếm A1 là đòn quyết định.',
+      quiz:{ question:'Đồi A1 được coi là?', options:['Cứ điểm mạnh nhất','Sở chỉ huy','Trung tâm pháo binh','Kho hậu cần'], answerIndex:0 } },
+    { id:'dbp5',  title:'Chiếm hầm De Castries (7/5/1954)', img:'assets/5.webp',
+      desc:'Cờ “Quyết chiến quyết thắng” tung bay trên nóc hầm chỉ huy.',
+      hint:'De Castries là chỉ huy.',
+      explain:'Sở chỉ huy thất thủ đánh dấu kết thúc chiến dịch.',
+      quiz:{ question:'Chiến thắng Điện Biên Phủ vào ngày nào?', options:['5/5/1954','6/5/1954','7/5/1954','8/5/1954'], answerIndex:2 } },
+    { id:'dbp6',  title:'Tiếng vang toàn cầu', img:'assets/6.jpg',
+      desc:'Chiến thắng chấn động thế giới, biểu tượng chống thực dân.',
+      hint:'Tác động lớn tới phong trào giải phóng.',
+      explain:'Nhiều quốc gia thuộc địa coi đây là tấm gương đấu tranh.',
+      quiz:{ question:'Ý nghĩa lớn nhất?', options:['Chấm dứt chiến tranh Đông Dương','Mở đầu chống Mỹ','Giải phóng miền Nam','Giải phóng Lào'], answerIndex:0 } },
+    { id:'dbp7',  title:'Hội nghị Genève (1954)', img:'assets/7.jpg',
+      desc:'Đàm phán và ký hiệp định đình chiến ở Đông Dương.',
+      hint:'Tổ chức tại Thuỵ Sĩ.',
+      explain:'Thiết lập ranh tạm thời ở vĩ tuyến 17.',
+      quiz:{ question:'Mục đích Hội nghị Genève?', options:['Lập LHQ','Đình chiến Đông Dương','Thống nhất VN','Lập ASEAN'], answerIndex:1 } },
+    { id:'dbp8',  title:'Tập kết lực lượng sau hiệp định', img:'assets/8.jpg',
+      desc:'Quân Pháp rút khỏi miền Bắc; lực lượng tập kết theo hiệp định.',
+      hint:'Vĩ tuyến 17 là ranh tạm thời.',
+      explain:'Di chuyển lực lượng theo quy định hiệp định.',
+      quiz:{ question:'Ranh giới tạm thời chia cắt Việt Nam ở?', options:['Vĩ tuyến 16','Vĩ tuyến 17','Vĩ tuyến 18','Vĩ tuyến 20'], answerIndex:1 } },
+    { id:'dbp9',  title:'Tái hiện trong điện ảnh', img:'assets/9.jpg',
+      desc:'Nhiều phim tài liệu, phim truyện tôn vinh chiến thắng.',
+      hint:'Phim tài liệu được dùng nhiều.',
+      explain:'Điện ảnh góp phần giáo dục truyền thống.',
+      quiz:{ question:'Điện ảnh Việt Nam làm gì để tôn vinh?', options:['Phim tài liệu & truyện','Truyện tranh','Triển lãm','Tượng đài'], answerIndex:0 } },
+    { id:'dbp10', title:'Kỷ niệm 70 năm (2024)', img:'assets/10.jpg',
+      desc:'Lễ kỷ niệm 70 năm chiến thắng lịch sử Điện Biên Phủ.',
+      hint:'Tổ chức trọng thể trên toàn quốc.',
+      explain:'Nhìn lại quá trình đấu tranh và gìn giữ hoà bình.',
+      quiz:{ question:'Tròn 70 năm vào năm nào?', options:['2023','2024','2025','2022'], answerIndex:1 } },
+  ];
+
+  elQTotal.textContent = EVENTS.length;
+
+  // State
+  let idx=0, score=0, streak=0, bestStreak=0, timer=null, timeLeft=20;
+  let used5050=false;
+  let answeredCurrent=false;
+  let correctCount=0;
+
+  function shuffle(a){ return a.sort(()=>Math.random()-0.5); }
+  function stopTimer(){ if(timer) clearInterval(timer); timer=null; }
+  function updTime(){ elTimeText.textContent=timeLeft; }
+  function getCorrectText(ev){ return ev.quiz.options[ev.quiz.answerIndex]; }
+
+  function startTimer(){
+    stopTimer(); timeLeft=20; updTime();
+    elTimeBar.style.width='100%';
+    timer=setInterval(()=>{
+      timeLeft--; updTime();
+      elTimeBar.style.width=`${(timeLeft/20)*100}%`;
+      if(timeLeft<=0){
+        stopTimer();
+        const ev=EVENTS[idx];
+        const correctText = getCorrectText(ev);
+        showExplain(false,'⏰ Hết giờ!');
+        commit(false);
+        answeredCurrent = true;
+        speakWithWebSpeechPromise(`Hết giờ. Đáp án đúng là: ${correctText}. ${ev.explain || ''}`);
+      }
+    },1000);
+  }
+
+  // Grid danh mục
+  function renderGrid(){
+    elGrid.innerHTML='';
+    EVENTS.forEach((ev,i)=>{
+      const b=document.createElement('button');
+      b.className='group rounded-xl overflow-hidden ring-1 ring-white/15 hover:ring-gold/60 text-left bg-black/30 h-full';
+      b.innerHTML=`
+        <img src="${ev.img}" class="w-full aspect-[4/3] object-cover"
+             onerror="this.onerror=null;this.src='assets/1.jpg'">
+        <div class="p-2">
+          <div class="font-semibold text-sm text-parchment group-hover:text-gold line-clamp-2">${ev.title}</div>
+        </div>`;
+      b.onclick=()=>{ idx=i; renderEvent(true); };
+      elGrid.appendChild(b);
+    });
+  }
+
+  const narrCache=new Map();
+
+  async function ensureVoicesReady(timeoutMs=2000){
+    return new Promise((resolve)=>{
+      let voices = speechSynthesis.getVoices();
+      if (voices && voices.length) return resolve(voices);
+      const id = setInterval(()=>{
+        voices = speechSynthesis.getVoices();
+        if (voices && voices.length){ clearInterval(id); resolve(voices); }
+      }, 100);
+      setTimeout(()=>{ clearInterval(id); resolve(speechSynthesis.getVoices()||[]); }, timeoutMs);
+    });
+  }
+
+  function speakWithWebSpeechPromise(text){
+    return new Promise(async (resolve)=>{
+      try{
+        if(!('speechSynthesis' in window)) return resolve(false);
+        await ensureVoicesReady();
+        speechSynthesis.cancel();
+        const u=new SpeechSynthesisUtterance(text);
+        u.lang='vi-VN'; u.rate=1.05; u.pitch=1.0; u.volume=1.0;
+        u.onend=()=>resolve(true); u.onerror=()=>resolve(false);
+        speechSynthesis.speak(u);
+      }catch{ resolve(false); }
+    });
+  }
+
+  async function postJSON(url,data){
+    return fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  }
+  async function getNarration(ev,compact=true){
+    if(narrCache.has(ev.id)) return narrCache.get(ev.id);
+    const r=await postJSON('/api/narrate',{eventId:ev.id,eventTitle:ev.title,eventDesc:ev.desc,lang:'vi',compact});
+    if(!r.ok) throw new Error('Narrate HTTP '+r.status);
+    const {text}=await r.json(); const out=text||ev.desc;
+    narrCache.set(ev.id,out); return out;
+  }
+
+  function hideQAForNarration(){
+    elExplain.classList.add('hidden');
+    elAnswers.innerHTML = `
+      <div class="px-3 py-2 rounded-xl border border-white/20 bg-white/5 text-white/90">
+        🔊 Đang thuyết minh... vui lòng đợi
+      </div>`;
+    btnHint.disabled = true; btn5050.disabled=true; btnNext.disabled = true;
+    stopTimer(); elTimeBar.style.width='0%'; elTimeText.textContent='20';
+  }
+  function revealQA(ev){
+    renderAnswers(ev);
+    btnHint.disabled=false; btn5050.disabled=false; btnNext.disabled=false;
+    startTimer();
+  }
+
+  function buildFeedback(ev, correct){
+    const correctText = getCorrectText(ev);
+    if (correct) {
+      const winLines = [
+        `Chính xác! ${ev.title}. ${ev.explain || ''}`,
+        `Tuyệt vời! Bạn đã chọn đúng: ${correctText}. ${ev.explain || ''}`,
+        `Đúng rồi! ${ev.desc} — ${ev.explain || ''}`
+      ];
+      return winLines[Math.floor(Math.random()*winLines.length)];
+    } else {
+      const loseLines = [
+        `Rất tiếc, bạn đã chọn sai. Đáp án đúng là ${correctText}. ${ev.explain || ''}`,
+        `Chưa chính xác. Lựa chọn đúng phải là ${correctText}. ${ev.explain || ''}`,
+        `Không đúng rồi. Đáp án chính xác: ${correctText}. ${ev.explain || ''}`
+      ];
+      return loseLines[Math.floor(Math.random()*loseLines.length)];
+    }
+  }
+
+  function renderAnswers(ev){
+    answeredCurrent = false;
+    elAnswers.innerHTML='';
+    ev.quiz.options.forEach((opt,i)=>{
+      const btn=document.createElement('button');
+      btn.className='px-3 py-2 rounded-xl border border-white/20 bg-white/5 text-white/95 text-left hover:bg-white/10';
+      btn.innerHTML=`<span class="mr-2 text-slate-300">${i+1}.</span> ${opt}`;
+      btn.onclick=async ()=>{
+        const correct=(i===ev.quiz.answerIndex);
+        answeredCurrent = true;
+        commit(correct);
+        if(correct) btn.classList.add('bg-emerald-200/90','!text-slate-900','border-emerald-400');
+        else        btn.classList.add('bg-rose-200/90','!text-slate-900','border-rose-400');
+        [...elAnswers.children].forEach(b=>b.disabled=true);
+        showExplain(correct);
+        const feedback = buildFeedback(ev, correct);
+        await speakWithWebSpeechPromise(feedback);
+        btnNext?.focus();
+      };
+      elAnswers.appendChild(btn);
+    });
+  }
+
+  async function renderEvent(scrollTop){
+    const ev=EVENTS[idx];
+    elImg.src=ev.img; elTitle.textContent=ev.title; elDesc.textContent=ev.desc;
+    elQIndex.textContent=idx+1;
+    used5050=false; btn5050.disabled=false;
+    elProgress.style.width=`${(idx/EVENTS.length)*100}%`;
+    hideQAForNarration();
+    if(scrollTop) window.scrollTo({top:0,behavior:'smooth'});
+    btnNarr.disabled=true; btnNarr.textContent='Đang đọc...';
+    try{
+      const text = await getNarration(ev, true);
+      await speakWithWebSpeechPromise(text);
+    }catch(e){ console.warn('Narrate-first error:', e); }
+    finally{
+      btnNarr.disabled=false; btnNarr.textContent='▶️ Nghe thuyết minh';
+      revealQA(ev);
+    }
+  }
+
+  function commit(correct){
+    stopTimer();
+    if(correct){
+      score += (10 + Math.min(streak,5)*2);
+      streak++;
+      bestStreak = Math.max(bestStreak, streak);
+      correctCount++;
+    } else {
+      score = Math.max(0, score-5);
+      streak = 0;
+    }
+    document.getElementById('score').textContent = score;
+    document.getElementById('streak').textContent = streak;
+  }
+
+  function showExplain(correct,extra=''){
+    const ev=EVENTS[idx];
+    elExplain.innerHTML=`<b>${correct?'✅ Chính xác!':'❌ Chưa đúng.'}</b> ${extra||''} ${ev.explain||''}`;
+    elExplain.classList.remove('hidden');
+  }
+
+  btnHint.onclick=()=>{ 
+    const ev=EVENTS[idx]; 
+    showExplain(true, `<i>Gợi ý:</i> ${ev.hint||''}`);
+    if (ev.hint) speakWithWebSpeechPromise(`Gợi ý: ${ev.hint}`);
+    else speakWithWebSpeechPromise(`Gợi ý: hãy chú ý mốc thời gian và địa danh.`);
+  };
+
+  btn5050.onclick=()=>{ 
+    if(used5050) return; used5050=true; btn5050.disabled=true;
+    const ev=EVENTS[idx];
+    const wrong=[0,1,2,3].filter(i=>i!==ev.quiz.answerIndex);
+    shuffle(wrong).slice(0,2).forEach(k=>{
+      const b=elAnswers.children[k]; if(b){ b.disabled=true; b.classList.add('opacity-50'); }
+    });
+    speakWithWebSpeechPromise('Đã loại bỏ hai phương án sai. Hãy chọn trong hai đáp án còn lại.');
+  };
+
+  /* ===== FIX: thay thế khối else lỗi bằng finishGame() + btnNext ===== */
+  function finishGame(){
+    elProgress.style.width = '100%';
+    saveScoreCloud(score, bestStreak);
+
+    if (correctCount === EVENTS.length) {
+      celebratePerfect();
+      speakWithWebSpeechPromise(
+        'Chúc mừng bạn đã hoàn thành bài làm! Bạn thật là một người yêu lịch sử.'
+      );
+    } else {
+      speakWithWebSpeechPromise(
+        `Bạn đã hoàn thành. Điểm ${score}. Combo cao nhất ${bestStreak}.`
+      );
+    }
+
+    alert(`🎉 Hoàn thành!\nĐiểm: ${score}\nĐúng: ${correctCount}/${EVENTS.length}\nCombo cao nhất: ${bestStreak}`);
+  }
+
+  btnNext.onclick = ()=>{
+    // Nếu còn câu tiếp theo -> sang câu mới
+    if (idx < EVENTS.length - 1) {
+      idx++;
+      renderEvent(true);
+    } else {
+      // Hết câu -> kết thúc
+      finishGame();
+    }
+  };
+  /* ===== END FIX ===== */
+
+  window.addEventListener('keydown',(e)=>{
+    if(e.code==='Space'){ e.preventDefault(); btnNarr.click(); }
+    if(e.key==='n'||e.key==='N') btnNext.click();
+    if(e.key==='h'||e.key==='H') btnHint.click();
+    if(e.key==='f'||e.key==='F') btn5050.click();
+    const n=parseInt(e.key,10);
+    if(n>=1&&n<=4){ const b=elAnswers.children[n-1]; if(b && !b.disabled) b.click(); }
+  });
+
+  btnNarr.addEventListener('click', async ()=>{
+    if(btnNarr.disabled) return;
+    const ev=EVENTS[idx];
+    btnNarr.disabled=true; btnNarr.textContent='Đang đọc...';
+    try{
+      const text = await getNarration(ev, true);
+      await speakWithWebSpeechPromise(text);
+    }catch(e){ alert('Web Speech lỗi: '+(e?.message||e)); }
+    finally{ btnNarr.disabled=false; btnNarr.textContent='▶️ Nghe thuyết minh'; }
+  });
+
+  function bootImagesFallback(){
+    document.querySelectorAll('img').forEach(img=>{
+      img.onerror = function(){ this.onerror=null; this.src='assets/1.jpg'; };
+    });
+  }
+  btnGate.addEventListener('click', ()=>{
+    try { speechSynthesis.resume(); } catch {}
+    document.getElementById('audioGate').classList.add('hidden');
+    renderEvent(true);
+  });
+  function init(){
+    renderGrid();
+    bootImagesFallback();
+  }
+  init();
+
+  // 🎆 Pháo hoa khi perfect
+  function celebratePerfect() {
+    const canvas = document.createElement('canvas');
+    canvas.style.position = 'fixed';
+    canvas.style.inset = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.zIndex = '60';
+    canvas.style.pointerEvents = 'none';
+    document.body.appendChild(canvas);
+
+    const myConfetti = confetti.create(canvas, { resize: true, useWorker: true });
+
+    const duration = 4000; // 4s
+    const end = Date.now() + duration;
+
+    (function frame() {
+      myConfetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
+      myConfetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
+      myConfetti({
+        particleCount: 2,
+        startVelocity: 45,
+        spread: 360,
+        ticks: 120,
+        origin: { x: Math.random(), y: Math.random() * 0.4 + 0.1 }
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      } else {
+        myConfetti({ particleCount: 200, spread: 120, startVelocity: 45, origin: { y: 0.6 } });
+        setTimeout(()=> canvas.remove(), 800);
+      }
+    })();
+  }
+  </script>
+</body>
+</html>

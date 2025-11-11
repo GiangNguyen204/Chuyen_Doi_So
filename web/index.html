@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Điện Biên Phủ — Đăng nhập</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['Playfair Display', 'serif'],
+          sans: ['Inter', 'system-ui', 'sans-serif']
+        },
+        colors: { parchment: '#f4ecd8', gold: '#d4b866' }
+      }
+    }
+  }
+</script>
+
+<!-- Firebase compat SDKs -->
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+<script>
+  // ===== Firebase Config =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyBhurmQcshxOr5owE50LtzU-KABLapK0eo",
+    authDomain: "dienbienphugame.firebaseapp.com",
+    projectId: "dienbienphugame",
+    storageBucket: "dienbienphugame.appspot.com",
+    messagingSenderId: "918716554179",
+    appId: "1:918716554179:web:d7336765e9b05379387b76"
+  };
+  firebase.initializeApp(firebaseConfig);
+  window.__firebase = { auth: firebase.auth() };
+</script>
+
+<style>
+  .bg-overlay::before{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(1200px 600px at 50% 20%, rgba(0,0,0,.35), transparent 60%),
+                linear-gradient(to bottom, rgba(0,0,0,.65), rgba(0,0,0,.65));
+    pointer-events:none;
+  }
+</style>
+</head>
+
+<body class="font-sans text-slate-100">
+  <!-- NỀN TOÀN MÀN -->
+  <div class="fixed inset-0 -z-10 bg-center bg-cover" style="background-image:url('assets/01.jpg')"></div>
+  <div class="bg-overlay fixed inset-0 -z-10"></div>
+
+  <!-- KHUNG CHÍNH -->
+  <main class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-xl">
+      <div class="rounded-2xl bg-black/50 ring-1 ring-white/10 backdrop-blur-md shadow-xl">
+        <div class="p-8 md:p-10 space-y-6">
+          <div class="text-center space-y-2">
+            <h1 class="font-display text-3xl md:text-4xl tracking-tight text-parchment">
+              Điện Biên Phủ (1954)
+            </h1>
+            <p class="text-slate-200/80">
+              Website tương tác lịch sử · Lưu điểm trên đám mây
+            </p>
+          </div>
+
+          <button id="btnGoogle"
+                  class="w-full inline-flex items-center justify-center gap-3 px-4 py-3 rounded-xl
+                         bg-white text-slate-900 font-semibold hover:bg-slate-100 transition
+                         ring-1 ring-white/50">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5" alt="">
+            <span id="btnGoogleText">Đăng nhập bằng Google</span>
+          </button>
+
+          <div class="flex items-center gap-3 text-slate-300/60">
+            <div class="h-px flex-1 bg-white/20"></div>
+            <span class="text-xs uppercase tracking-widest">hoặc</span>
+            <div class="h-px flex-1 bg-white/20"></div>
+          </div>
+
+          <form id="emailForm" class="space-y-3">
+            <div class="space-y-2">
+              <label class="text-sm text-parchment/90">Email</label>
+              <input id="email" type="email" required
+                     class="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-slate-300/50
+                            ring-1 ring-white/20 focus:outline-none focus:ring-gold/60"
+                     placeholder="you@example.com" autocomplete="username">
+            </div>
+            <div class="space-y-2">
+              <label class="text-sm text-parchment/90">Mật khẩu</label>
+              <input id="password" type="password" required
+                     class="w-full px-3 py-2 rounded-lg bg-black/40 text-white placeholder-slate-300/50
+                            ring-1 ring-white/20 focus:outline-none focus:ring-gold/60"
+                     placeholder="••••••••" autocomplete="current-password" minlength="6">
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+              <button id="btnEmailLogin" type="submit"
+                      class="px-4 py-2 rounded-lg bg-gold/90 text-black font-semibold hover:bg-gold transition">
+                Đăng nhập
+              </button>
+              <button id="btnEmailSignup" type="button"
+                      class="px-4 py-2 rounded-lg bg-transparent text-parchment ring-1 ring-parchment/50 hover:bg-white/10 transition">
+                Đăng ký
+              </button>
+              <button id="btnForgot" type="button"
+                      class="ml-auto text-sm text-slate-200/80 hover:underline">
+                Quên mật khẩu?
+              </button>
+            </div>
+          </form>
+
+          <div class="pt-2 text-xs leading-relaxed text-slate-200/70">
+            Khi tiếp tục, bạn đồng ý với Quy tắc cộng đồng và Chính sách bảo mật của dự án.
+          </div>
+        </div>
+
+        <div class="px-6 py-4 rounded-b-2xl bg-black/60 ring-1 ring-white/10 flex items-center justify-between">
+          <div class="text-xs text-slate-300/70">© 2025 — Dự án lịch sử Điện Biên Phủ</div>
+          <a href="app.html" class="text-xs text-gold hover:underline">Vào thẳng trải nghiệm</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-6 hidden
+                         bg-rose-600 text-white px-4 py-2 rounded-lg shadow-lg"></div>
+
+<script>
+  const auth = window.__firebase?.auth;
+  if (!auth) {
+    console.error('Firebase auth chưa sẵn sàng');
+  }
+
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  // ===== Helpers =====
+  const $ = (id) => document.getElementById(id);
+  const btnGoogle = $('btnGoogle');
+  const btnGoogleText = $('btnGoogleText');
+  const emailForm = $('emailForm');
+  const emailEl = $('email');
+  const passEl = $('password');
+  const btnEmailSignup = $('btnEmailSignup');
+  const btnForgot = $('btnForgot');
+
+  function showToast(msg){
+    const t = $('toast');
+    if (!t) return alert(msg);
+    t.textContent = msg;
+    t.classList.remove('hidden');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(()=> t.classList.add('hidden'), 4000);
+  }
+
+  function setLoading(el, loading, textEl, textLoading){
+    if (!el) return;
+    el.disabled = !!loading;
+    el.classList.toggle('opacity-70', !!loading);
+    if (textEl && textLoading){
+      textEl.dataset._textOriginal = textEl.dataset._textOriginal || textEl.textContent;
+      textEl.textContent = loading ? textLoading : textEl.dataset._textOriginal;
+    }
+  }
+
+  function getReturnUrl(){
+    const u = new URL(location.href);
+    const next = u.searchParams.get('next');
+    // chỉ cho phép đường dẫn tương đối để tránh open redirect
+    if (next && !/^[a-zA-Z]+:\/\//.test(next)) return next;
+    return 'app.html';
+  }
+
+  // Lưu trạng thái đăng nhập ở LOCAL (giữ sau khi reload)
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
+
+  // Nếu đã đăng nhập -> vào app
+  auth.onAuthStateChanged((user) => {
+    if (user) window.location.replace(getReturnUrl());
+  });
+
+  // Sau khi quay lại từ signInWithRedirect, Firebase sẽ có kết quả
+  auth.getRedirectResult().catch((e)=>{
+    // không phải lúc nào cũng có result; chỉ log lỗi đặc biệt
+    if (e?.code && e.code !== 'auth/no-auth-event') {
+      console.error('[Redirect Result]', e);
+    }
+  });
+
+  // ===== Google Sign-in (Popup -> Redirect fallback) =====
+  btnGoogle?.addEventListener('click', async () => {
+    try {
+      setLoading(btnGoogle, true, btnGoogleText, 'Đang mở Google…');
+      await auth.signInWithPopup(provider);
+    } catch (e) {
+      console.error('[Google Sign-in error]', e);
+      const code = e?.code || '';
+      if (code === 'auth/popup-blocked' || code === 'auth/popup-closed-by-user') {
+        try {
+          await auth.signInWithRedirect(provider);
+          return;
+        } catch (e2) {
+          showToast('Google redirect lỗi: ' + (e2?.message || e2));
+          return;
+        }
+      }
+      if (code === 'auth/unauthorized-domain') {
+        showToast('⚠️ Domain chưa được phép. Firebase → Authentication → Settings → Authorized domains → thêm "localhost".');
+      } else if (code === 'auth/configuration-not-found') {
+        showToast('⚠️ Chưa bật Google trong Sign-in method.');
+      } else {
+        showToast('Đăng nhập Google lỗi: ' + (code || e?.message || e));
+      }
+    } finally {
+      setLoading(btnGoogle, false, btnGoogleText);
+    }
+  });
+
+  // ===== Email/Password login =====
+  emailForm?.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    if (!emailEl?.value || !passEl?.value) return showToast('Hãy nhập email & mật khẩu.');
+    try {
+      setLoading(emailForm.btnEmailLogin || $('btnEmailLogin'), true);
+      await auth.signInWithEmailAndPassword(emailEl.value, passEl.value);
+      // onAuthStateChanged sẽ chuyển trang
+    } catch (e) {
+      const code = e?.code || '';
+      if (code === 'auth/operation-not-allowed')
+        showToast('⚠️ Chưa bật Email/Password trong Sign-in method.');
+      else if (code === 'auth/user-not-found' || code === 'auth/wrong-password')
+        showToast('Email hoặc mật khẩu không đúng.');
+      else if (code === 'auth/invalid-email')
+        showToast('Email không hợp lệ.');
+      else showToast('Đăng nhập lỗi: ' + (code || e?.message || e));
+    } finally {
+      setLoading(emailForm.btnEmailLogin || $('btnEmailLogin'), false);
+    }
+  });
+
+  // ===== Signup =====
+  btnEmailSignup?.addEventListener('click', async () => {
+    try {
+      if (!emailEl?.value || !passEl?.value) return showToast('Nhập email & mật khẩu để đăng ký.');
+      setLoading(btnEmailSignup, true);
+      await auth.createUserWithEmailAndPassword(emailEl.value, passEl.value);
+      showToast('✅ Đăng ký thành công! Đang chuyển hướng…');
+      // onAuthStateChanged sẽ chuyển trang
+    } catch (e) {
+      const code = e?.code || '';
+      if (code === 'auth/operation-not-allowed')
+        showToast('⚠️ Chưa bật Email/Password trong Sign-in method.');
+      else if (code === 'auth/weak-password')
+        showToast('Mật khẩu quá yếu (tối thiểu 6 ký tự).');
+      else if (code === 'auth/email-already-in-use')
+        showToast('Email đã được sử dụng.');
+      else if (code === 'auth/invalid-email')
+        showToast('Email không hợp lệ.');
+      else showToast('Đăng ký lỗi: ' + (code || e?.message || e));
+    } finally {
+      setLoading(btnEmailSignup, false);
+    }
+  });
+
+  // ===== Forgot password =====
+  btnForgot?.addEventListener('click', async () => {
+    try {
+      if (!emailEl?.value) { showToast('Nhập email trước khi khôi phục.'); return; }
+      await auth.sendPasswordResetEmail(emailEl.value);
+      showToast('📩 Đã gửi email khôi phục mật khẩu.');
+    } catch (e) {
+      showToast('Khôi phục lỗi: ' + (e?.code || e?.message || e));
+    }
+  });
+</script>
+</body>
+</html>
